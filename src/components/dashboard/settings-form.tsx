@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
+import { useUser } from "@/firebase";
 
 const settingsSchema = z.object({
     salary: z.coerce.number().min(0, "Salary must be a positive number."),
@@ -25,42 +26,53 @@ const settingsSchema = z.object({
     path: ["needs"],
 });
 
-export default function SettingsForm({ user }: { user: UserProfile }) {
+export default function SettingsForm({ user: initialUser }: { user: UserProfile }) {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { user } = useUser();
 
     const form = useForm<z.infer<typeof settingsSchema>>({
         resolver: zodResolver(settingsSchema),
         defaultValues: {
-            salary: user.salary || 0,
-            taxRegime: user.taxRegime || 'new',
-            needs: user.budget?.needs || 50,
-            wants: user.budget?.wants || 30,
-            savings: user.budget?.savings || 20,
+            salary: initialUser.salary || 0,
+            taxRegime: initialUser.taxRegime || 'new',
+            needs: initialUser.budget?.needs || 50,
+            wants: initialUser.budget?.wants || 30,
+            savings: initialUser.budget?.savings || 20,
         },
     });
 
     const [needs, wants, savings] = form.watch(["needs", "wants", "savings"]);
 
     async function onSubmit(values: z.infer<typeof settingsSchema>) {
+        if (!user) {
+            toast({ variant: "destructive", title: "Error", description: "You must be logged in." });
+            return;
+        }
+
         setIsSubmitting(true);
-        const formData = new FormData();
-        Object.entries(values).forEach(([key, value]) => {
-            formData.append(key, String(value));
-        });
+        
+        const settingsData: Partial<UserProfile> = {
+            salary: values.salary,
+            taxRegime: values.taxRegime,
+            budget: {
+                needs: values.needs,
+                wants: values.wants,
+                savings: values.savings,
+            }
+        };
 
-        const result = await updateUserSettings(formData);
-
-        if (result?.error) {
-            toast({
-                variant: "destructive",
-                title: "Update Failed",
-                description: result.error,
-            });
-        } else {
+        try {
+            await updateUserSettings(user.uid, settingsData);
             toast({
                 title: "Success!",
                 description: "Your settings have been updated.",
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Update Failed",
+                description: error.message || "Failed to update settings.",
             });
         }
         setIsSubmitting(false);

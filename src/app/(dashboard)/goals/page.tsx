@@ -1,14 +1,43 @@
-import { getSavingsGoals, getUser } from '@/app/actions';
-import { redirect } from 'next/navigation';
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { getSavingsGoals } from '@/app/actions';
 import AddGoalDialog from '@/components/dashboard/add-goal-dialog';
 import GoalsList from '@/components/goals/goals-list';
+import type { SavingsGoal } from '@/lib/types';
 
-export default async function GoalsPage() {
-    const goals = await getSavingsGoals();
-    const user = await getUser();
+export default function GoalsPage() {
+    const { user, isUserLoading } = useUser();
+    const router = useRouter();
+    const [goals, setGoals] = useState<SavingsGoal[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    if (!user) {
-        redirect('/login');
+    useEffect(() => {
+        if (!isUserLoading && !user) {
+            router.push('/login');
+        }
+    }, [isUserLoading, user, router]);
+
+    useEffect(() => {
+        async function fetchGoals() {
+            if (user) {
+                setLoading(true);
+                const userGoals = await getSavingsGoals(user.uid);
+                setGoals(userGoals);
+                setLoading(false);
+            }
+        }
+        fetchGoals();
+    }, [user]);
+
+    if (loading || isUserLoading) {
+        return (
+            <div className="flex h-screen w-screen items-center justify-center">
+                <div className="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
+            </div>
+        );
     }
 
     return (

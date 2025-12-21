@@ -5,7 +5,7 @@ import { useUser } from '@/firebase';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { useEffect } from 'react';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { UserProfile } from '@/lib/types';
 
@@ -28,22 +28,30 @@ export default function DashboardLayout({
   useEffect(() => {
     if (user && firestore) {
       const userRef = doc(firestore, "users", user.uid);
-      const userProfile: UserProfile = {
-          uid: user.uid,
-          email: user.email,
-          name: user.displayName,
-          photoURL: user.photoURL,
-          createdAt: serverTimestamp(),
-          salary: 50000, // default value
-          taxRegime: 'new', // default value
-          budget: { // default 50-30-20
-            needs: 50,
-            wants: 30,
-            savings: 20,
-          }
-        };
-      // Use setDoc with merge:true to create or update the user document
-      setDoc(userRef, userProfile, { merge: true });
+      
+      const checkAndCreateUserProfile = async () => {
+        const userDoc = await getDoc(userRef);
+        if (!userDoc.exists()) {
+          const userProfile: UserProfile = {
+              uid: user.uid,
+              email: user.email,
+              name: user.displayName,
+              photoURL: user.photoURL,
+              createdAt: serverTimestamp() as any,
+              salary: 50000, // default value
+              taxRegime: 'new', // default value
+              budget: { // default 50-30-20
+                needs: 50,
+                wants: 30,
+                savings: 20,
+              }
+            };
+          // Use setDoc with merge:true to create or update the user document
+          await setDoc(userRef, userProfile, { merge: true });
+        }
+      };
+
+      checkAndCreateUserProfile();
     }
   }, [user, firestore])
 

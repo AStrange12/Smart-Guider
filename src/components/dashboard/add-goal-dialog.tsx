@@ -24,27 +24,43 @@ import { Goal } from "lucide-react";
 import { addSavingsGoal } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useRef, useState } from "react";
+import { useUser } from "@/firebase";
 
 export default function AddGoalDialog() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
+  const { user } = useUser();
 
-  const handleSubmit = async (formData: FormData) => {
-    const result = await addSavingsGoal(formData);
-    if (result?.error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: result.error,
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "Savings goal added successfully.",
-      });
-      formRef.current?.reset();
-      setOpen(false);
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!user) {
+        toast({ variant: "destructive", title: "Error", description: "You must be logged in to add a goal." });
+        return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const goalData = {
+        name: formData.get('name') as string,
+        targetAmount: parseFloat(formData.get('targetAmount') as string),
+        category: formData.get('category') as 'Emergency' | 'Gold' | 'Investments' | 'Other',
+    };
+
+    try {
+        await addSavingsGoal(user.uid, goalData);
+        toast({
+            title: "Success",
+            description: "Savings goal added successfully.",
+        });
+        formRef.current?.reset();
+        setOpen(false);
+    } catch (error: any) {
+         toast({
+            variant: "destructive",
+            title: "Error",
+            description: error.message || "Failed to add savings goal.",
+        });
     }
   };
 
@@ -63,7 +79,7 @@ export default function AddGoalDialog() {
             Set a new financial goal to track your progress.
           </DialogDescription>
         </DialogHeader>
-        <form ref={formRef} action={handleSubmit} className="grid gap-4 py-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Goal Name

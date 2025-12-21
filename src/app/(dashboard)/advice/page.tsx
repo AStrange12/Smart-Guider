@@ -1,21 +1,55 @@
-import { getUser, getExpenses } from '@/app/actions';
-import { redirect } from 'next/navigation';
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useUser, useFirestore } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { getExpenses, getUser } from '@/app/actions';
 import { analyzeSpendingBehavior } from '@/ai/flows/analyze-spending-behavior';
 import AdviceGenerator from '@/components/advice/advice-generator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Expense, UserProfile } from '@/lib/types';
 
-export default async function AdvicePage() {
-    const user = await getUser();
-    if (!user) {
-        redirect('/login');
+export default function AdvicePage() {
+    const { user, isUserLoading } = useUser();
+    const router = useRouter();
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+    const [spendingAnalysisSummary, setSpendingAnalysisSummary] = useState<string>('No spending data available.');
+
+    useEffect(() => {
+        if (!isUserLoading && !user) {
+            router.push('/login');
+        }
+    }, [isUserLoading, user, router]);
+
+    useEffect(() => {
+        async function fetchData() {
+            if (user) {
+                const profile = await getUser(user.uid);
+                setUserProfile(profile);
+
+                if (profile) {
+                    const expenses = await getExpenses(user.uid);
+                    const spendingAnalysisResult = await analyzeSpendingBehavior({
+                        expenses: expenses.map(e => ({ ...e, date: e.date.toDate().toISOString() })),
+                        income: profile.salary || 0,
+                    }).catch(() => null);
+
+                    if (spendingAnalysisResult) {
+                        setSpendingAnalysisSummary(spendingAnalysisResult.summary);
+                    }
+                }
+            }
+        }
+        fetchData();
+    }, [user]);
+
+    if (isUserLoading || !userProfile) {
+        return (
+            <div className="flex h-screen w-screen items-center justify-center">
+                <div className="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
+            </div>
+        );
     }
-
-    const expenses = await getExpenses();
-
-    const spendingAnalysisResult = await analyzeSpendingBehavior({
-        expenses: expenses.map(e => ({...e, date: e.date.toDate().toISOString()})),
-        income: user.salary || 0,
-    }).catch(() => null);
 
     return (
         <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -30,9 +64,9 @@ export default async function AdvicePage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <AdviceGenerator 
-                        userProfile={user} 
-                        spendingAnalysisSummary={spendingAnalysisResult?.summary || 'No spending data available.'}
+                    <AdviceGenerator
+                        userProfile={userProfile}
+                        spendingAnalysisSummary={spendingAnalysisSummary}
                     />
                 </CardContent>
             </Card>

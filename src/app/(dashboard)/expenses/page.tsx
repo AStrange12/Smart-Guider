@@ -1,17 +1,45 @@
-import { getExpenses, getUser } from '@/app/actions';
-import { redirect } from 'next/navigation';
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { getExpenses } from '@/app/actions';
 import AddExpenseDialog from '@/components/dashboard/add-expense-dialog';
 import ExpensesDataTable from '@/components/expenses/expenses-data-table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import SpendingByCategoryChart from '@/components/expenses/spending-by-category-chart';
+import type { Expense } from '@/lib/types';
 
+export default function ExpensesPage() {
+    const { user, isUserLoading } = useUser();
+    const router = useRouter();
+    const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [loading, setLoading] = useState(true);
 
-export default async function ExpensesPage() {
-    const expenses = await getExpenses();
-    const user = await getUser();
+    useEffect(() => {
+        if (!isUserLoading && !user) {
+            router.push('/login');
+        }
+    }, [isUserLoading, user, router]);
 
-    if (!user) {
-        redirect('/login');
+    useEffect(() => {
+        async function fetchExpenses() {
+            if (user) {
+                setLoading(true);
+                const userExpenses = await getExpenses(user.uid);
+                setExpenses(userExpenses);
+                setLoading(false);
+            }
+        }
+        fetchExpenses();
+    }, [user]);
+
+    if (loading || isUserLoading) {
+        return (
+            <div className="flex h-screen w-screen items-center justify-center">
+                <div className="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
+            </div>
+        );
     }
 
     const sortedExpenses = expenses.sort((a, b) => b.date.toMillis() - a.date.toMillis());

@@ -1,13 +1,46 @@
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
 import { getUser } from '@/app/actions';
-import { redirect } from 'next/navigation';
 import SettingsForm from '@/components/dashboard/settings-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import type { UserProfile } from '@/lib/types';
 
-export default async function SettingsPage() {
-    const user = await getUser();
-    if (!user) {
-        redirect('/login');
+export default function SettingsPage() {
+    const { user, isUserLoading } = useUser();
+    const router = useRouter();
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+    const [loading, setLoading] = useState(true);
+    
+    useEffect(() => {
+        if (!isUserLoading && !user) {
+            router.push('/login');
+        }
+    }, [isUserLoading, user, router]);
+
+    useEffect(() => {
+        async function fetchUserProfile() {
+            if (user) {
+                setLoading(true);
+                const profile = await getUser(user.uid);
+                setUserProfile(profile);
+                setLoading(false);
+            }
+        }
+        fetchUserProfile();
+    }, [user]);
+
+    if (loading || isUserLoading) {
+        return (
+            <div className="flex h-screen w-screen items-center justify-center">
+                <div className="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
+            </div>
+        );
     }
+    
+    if (!userProfile) return null;
 
     return (
         <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -22,7 +55,7 @@ export default async function SettingsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <SettingsForm user={user} />
+                    <SettingsForm user={userProfile} />
                 </CardContent>
             </Card>
         </main>

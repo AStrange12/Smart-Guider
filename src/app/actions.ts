@@ -1,144 +1,103 @@
-"use server";
+"use client";
 
-import { getApp } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  addDoc,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
 import { UserProfile, Expense, SavingsGoal } from "@/lib/types";
-import { collection, doc, getDoc, getDocs, setDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { revalidatePath } from "next/cache";
+import { getAuth } from "firebase/auth";
+import { initializeFirebase } from "@/firebase";
 
-const db = getFirestore(getApp());
-const auth = getAuth(getApp());
+const { firestore, auth } = initializeFirebase();
 
-export async function getUser(): Promise<UserProfile | null> {
+export async function getUser(uid: string): Promise<UserProfile | null> {
   try {
-    const user = auth.currentUser;
-    if (!user) return null;
+    if (!uid) return null;
 
-    const userRef = doc(db, "users", user.uid);
+    const userRef = doc(firestore, "users", uid);
     const userDoc = await getDoc(userRef);
 
     if (!userDoc.exists()) {
       return null;
     }
 
-    return userDoc.data() as UserProfile;
+    return { uid, ...userDoc.data() } as UserProfile;
   } catch (error) {
     console.error("Error getting user:", error);
     return null;
   }
 }
 
-export async function getExpenses(): Promise<Expense[]> {
+export async function getExpenses(userId: string): Promise<Expense[]> {
   try {
-    const user = auth.currentUser;
-    if (!user) return [];
+    if (!userId) return [];
 
-    const expensesRef = collection(db, "users", user.uid, "expenses");
+    const expensesRef = collection(firestore, "users", userId, "expenses");
     const querySnapshot = await getDocs(expensesRef);
-    
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
+
+    return querySnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as Expense)
+    );
   } catch (error) {
     console.error("Error getting expenses:", error);
     return [];
   }
 }
 
-export async function addExpense(formData: FormData) {
-  try {
-    const user = auth.currentUser;
-    if (!user) throw new Error("User not authenticated");
-
-    const expenseData = {
-      description: formData.get('description') as string,
-      amount: parseFloat(formData.get('amount') as string),
-      category: formData.get('category') as string,
-      type: formData.get('type') as 'need' | 'want',
+export async function addExpense(userId: string, expenseData: Omit<Expense, 'id' | 'userId' | 'date'>) {
+    if (!userId) throw new Error("User not authenticated");
+    
+    const expensePayload = {
+      ...expenseData,
       date: serverTimestamp(),
-      userId: user.uid,
+      userId: userId,
     };
 
-    const expensesRef = collection(db, "users", user.uid, "expenses");
-    await addDoc(expensesRef, expenseData);
-
-    revalidatePath("/dashboard");
-    revalidatePath("/expenses");
-  } catch (error) {
-    console.error("Error adding expense:", error);
-    return { error: "Failed to add expense." };
-  }
+    const expensesRef = collection(firestore, "users", userId, "expenses");
+    await addDoc(expensesRef, expensePayload);
 }
 
-export async function getSavingsGoals(): Promise<SavingsGoal[]> {
-  try {
-    const user = auth.currentUser;
-    if (!user) return [];
 
-    const goalsRef = collection(db, "users", user.uid, "savingsGoals");
+export async function getSavingsGoals(userId: string): Promise<SavingsGoal[]> {
+  try {
+    if (!userId) return [];
+
+    const goalsRef = collection(firestore, "users", userId, "savingsGoals");
     const querySnapshot = await getDocs(goalsRef);
-    
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SavingsGoal));
+
+    return querySnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as SavingsGoal)
+    );
   } catch (error) {
     console.error("Error getting savings goals:", error);
     return [];
   }
 }
 
-export async function addSavingsGoal(formData: FormData) {
-    try {
-      const user = auth.currentUser;
-      if (!user) throw new Error("User not authenticated");
-  
-      const goalData = {
-        name: formData.get('name') as string,
-        targetAmount: parseFloat(formData.get('targetAmount') as string),
-        category: formData.get('category') as 'Emergency' | 'Gold' | 'Investments' | 'Other',
+export async function addSavingsGoal(userId: string, goalData: Omit<SavingsGoal, 'id' | 'userId' | 'currentAmount'>) {
+    if (!userId) throw new Error("User not authenticated");
+
+    const newGoalData = {
+        ...goalData,
         currentAmount: 0,
-        userId: user.uid,
-      };
-  
-      const goalsRef = collection(db, "users", user.uid, "savingsGoals");
-      await addDoc(goalsRef, goalData);
-  
-      revalidatePath("/dashboard");
-      revalidatePath("/goals");
-    } catch (error) {
-      console.error("Error adding savings goal:", error);
-      return { error: "Failed to add savings goal." };
-    }
-  }
+        userId: userId,
+    };
 
-export async function updateUserSettings(formData: FormData) {
-    try {
-        const user = auth.currentUser;
-        if (!user) throw new Error("User not authenticated");
+    const goalsRef = collection(firestore, "users", userId, "savingsGoals");
+    await addDoc(goalsRef, newGoalData);
+}
 
-        const salary = formData.get('salary');
-        const taxRegime = formData.get('taxRegime');
-        const needs = formData.get('needs');
-        const wants = formData.get('wants');
-        const savings = formData.get('savings');
+export async function updateUserSettings(userId: string, settingsData: Partial<UserProfile>) {
+    if (!userId) throw new Error("User not authenticated");
 
-        const userRef = doc(db, 'users', user.uid);
-        const updateData: Partial<UserProfile> = {};
-
-        if (salary) updateData.salary = parseFloat(salary as string);
-        if (taxRegime) updateData.taxRegime = taxRegime as 'old' | 'new';
-        if (needs && wants && savings) {
-            updateData.budget = {
-                needs: parseInt(needs as string, 10),
-                wants: parseInt(wants as string, 10),
-                savings: parseInt(savings as string, 10),
-            }
-        }
-        
-        await setDoc(userRef, updateData, { merge: true });
-
-        revalidatePath('/settings');
-        revalidatePath('/dashboard');
-
-    } catch (error) {
-        console.error('Error updating user settings: ', error);
-        return { error: 'Failed to update settings.'}
-    }
+    const userRef = doc(firestore, "users", userId);
+    await setDoc(userRef, settingsData, { merge: true });
 }

@@ -1,11 +1,15 @@
-import { redirect } from 'next/navigation';
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase';
 import {
   getUser,
   getExpenses,
   getSavingsGoals,
 } from '@/app/actions';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { DollarSign, Goal, Lightbulb, PiggyBank, Receipt } from 'lucide-react';
+import { DollarSign, Receipt } from 'lucide-react';
 import SpendingSplitCard from '@/components/dashboard/spending-split-card';
 import FinancialHealthCard from '@/components/dashboard/financial-health-card';
 import PersonalizedAdviceCard from '@/components/dashboard/personalized-advice-card';
@@ -15,39 +19,89 @@ import AddExpenseDialog from '@/components/dashboard/add-expense-dialog';
 import AddGoalDialog from '@/components/dashboard/add-goal-dialog';
 import { analyzeSpendingBehavior, summarizeMonthlySpending } from '@/ai/flows';
 import MonthEndRiskCard from '@/components/dashboard/month-end-risk-card';
+import type { UserProfile, Expense, SavingsGoal } from '@/lib/types';
+import type { SummarizeMonthlySpendingOutput } from '@/ai/flows/summarize-monthly-spending';
 
-export default async function DashboardPage() {
-  const user = await getUser();
-  if (!user) {
-    redirect('/login');
+export default function DashboardPage() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
+  const [spendingAnalysis, setSpendingAnalysis] = useState<{ financialHealthScore: number } | null>(null);
+  const [spendingSummary, setSpendingSummary] = useState<SummarizeMonthlySpendingOutput | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [isUserLoading, user, router]);
+
+  useEffect(() => {
+    async function fetchData() {
+      if (user) {
+        setLoading(true);
+        const [profile, userExpenses, userGoals] = await Promise.all([
+          getUser(user.uid),
+          getExpenses(user.uid),
+          getSavingsGoals(user.uid),
+        ]);
+
+        setUserProfile(profile);
+        setExpenses(userExpenses);
+        setSavingsGoals(userGoals);
+
+        if (profile) {
+            const analysis = await analyzeSpendingBehavior({
+                expenses: userExpenses.map(e => ({...e, date: e.date.toDate().toISOString()})),
+                income: profile.salary || 0,
+            }).catch(() => null);
+            setSpendingAnalysis(analysis);
+
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const monthlyExpenses = userExpenses.filter(e => e.date.toDate() >= startOfMonth);
+
+            const needsTotal = monthlyExpenses.filter(e => e.type === 'need').reduce((acc, exp) => acc + exp.amount, 0);
+            const wantsTotal = monthlyExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
+            const totalSpent = needsTotal + wantsTotal;
+            const income = profile.salary || 0;
+            const savingsTotal = income > totalSpent ? income - totalSpent : 0;
+            
+            const summary = await summarizeMonthlySpending({
+                needs: needsTotal,
+                wants: wantsTotal,
+                savings: savingsTotal,
+                totalIncome: income
+            }).catch(() => null);
+            setSpendingSummary(summary);
+        }
+
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [user]);
+
+  if (loading || isUserLoading) {
+    return (
+        <div className="flex h-screen w-screen items-center justify-center">
+            <div className="h-16 w-16 animate-spin rounded-full border-4 border-solid border-primary border-t-transparent"></div>
+        </div>
+    );
   }
-
-  const expenses = await getExpenses();
-  const savingsGoals = await getSavingsGoals();
+  
+  if (!userProfile) return null;
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  
   const monthlyExpenses = expenses.filter(e => e.date.toDate() >= startOfMonth);
-
   const totalSpent = monthlyExpenses.reduce((acc, exp) => acc + exp.amount, 0);
   const needsTotal = monthlyExpenses.filter(e => e.type === 'need').reduce((acc, exp) => acc + exp.amount, 0);
   const wantsTotal = monthlyExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
-  const income = user.salary || 0;
+  const income = userProfile.salary || 0;
   const savingsTotal = income - totalSpent > 0 ? income - totalSpent : 0;
-  
-  const spendingAnalysis = await analyzeSpendingBehavior({
-    expenses: expenses.map(e => ({...e, date: e.date.toDate().toISOString()})),
-    income: income,
-  }).catch(() => null);
-
-  const spendingSummary = await summarizeMonthlySpending({
-    needs: needsTotal,
-    wants: wantsTotal,
-    savings: savingsTotal,
-    totalIncome: income,
-  }).catch(() => null);
-
 
   return (
     <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -82,7 +136,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
         <FinancialHealthCard score={spendingAnalysis?.financialHealthScore} />
-        <MonthEndRiskCard income={income} totalSpent={totalSpent} budget={user.budget} />
+        <MonthEndRiskCard income={income} totalSpent={totalSpent} budget={userProfile.budget} />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <SpendingSplitCard 
