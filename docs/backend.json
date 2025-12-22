@@ -33,7 +33,7 @@
         },
         "savingsPercentage": {
           "type": "number",
-          "description": "Percentage of income allocated to savings, based on the 50-30-20 rule."
+          "description": "Percentage of income allocated to savings, a new based on the 50-30-20 rule."
         }
       },
       "required": [
@@ -121,7 +121,8 @@
   },
   "auth": {
     "providers": [
-      "password"
+      "password",
+      "google"
     ]
   },
   "firestore": {

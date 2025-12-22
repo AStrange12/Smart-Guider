@@ -71,7 +71,14 @@ export default function SpendingSplitCard({ needs, wants, savings, income }: Spe
           <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Tooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <Tooltip
+                  cursor={false}
+                  content={
+                    <ChartContainer config={chartConfig}>
+                      <ChartTooltipContent hideLabel />
+                    </ChartContainer>
+                  }
+                />
                 <Pie
                   data={chartData}
                   dataKey="value"
