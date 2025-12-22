@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -47,7 +48,8 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
 
   useEffect(() => {
     if (!auth) return;
-  
+
+    // Handle redirect from Google sign-in
     getRedirectResult(auth)
       .then((result) => {
         if (result?.user) {
@@ -55,8 +57,20 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
         }
       })
       .catch((error) => {
-        console.error("Redirect error:", error);
+        // This can happen if the user closes the popup.
+        // We can generally ignore this error.
+        console.error("Google sign-in redirect error:", error.message);
       });
+      
+    // Handle redirect for email/password and direct Google sign-in
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+            router.push('/dashboard');
+        }
+    });
+
+    return () => unsubscribe();
+
   }, [auth, router]);
   
 
@@ -91,7 +105,6 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
         title: "Google Sign-In Failed",
         description: error.message,
       });
-    } finally {
       setGoogleLoading(false);
     }
   };
