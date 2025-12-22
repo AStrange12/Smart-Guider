@@ -12,7 +12,6 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { UserProfile, Expense, SavingsGoal } from "@/lib/types";
-import { revalidatePath } from "next/cache";
 import { getAuth } from "firebase/auth";
 import { initializeFirebase } from "@/firebase";
 
