@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { getSavingsGoals } from '@/app/actions';
 import AddGoalDialog from '@/components/dashboard/add-goal-dialog';
@@ -10,6 +10,7 @@ import type { SavingsGoal } from '@/lib/types';
 
 export default function GoalsPage() {
     const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
     const router = useRouter();
     const [goals, setGoals] = useState<SavingsGoal[]>([]);
     const [loading, setLoading] = useState(true);
@@ -22,15 +23,15 @@ export default function GoalsPage() {
 
     useEffect(() => {
         async function fetchGoals() {
-            if (user) {
+            if (user && firestore) {
                 setLoading(true);
-                const userGoals = await getSavingsGoals(user.uid);
+                const userGoals = await getSavingsGoals(firestore, user.uid);
                 setGoals(userGoals);
                 setLoading(false);
             }
         }
         fetchGoals();
-    }, [user]);
+    }, [user, firestore]);
 
     if (loading || isUserLoading) {
         return (

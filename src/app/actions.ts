@@ -10,14 +10,13 @@ import {
   addDoc,
   serverTimestamp,
   updateDoc,
+  Firestore,
 } from "firebase/firestore";
 import { UserProfile, Expense, SavingsGoal } from "@/lib/types";
 import { getAuth } from "firebase/auth";
 import { initializeFirebase } from "@/firebase";
 
-const { firestore, auth } = initializeFirebase();
-
-export async function getUser(uid: string): Promise<UserProfile | null> {
+export async function getUser(firestore: Firestore, uid: string): Promise<UserProfile | null> {
   try {
     if (!uid) return null;
 
@@ -35,7 +34,7 @@ export async function getUser(uid: string): Promise<UserProfile | null> {
   }
 }
 
-export async function getExpenses(userId: string): Promise<Expense[]> {
+export async function getExpenses(firestore: Firestore, userId: string): Promise<Expense[]> {
   try {
     if (!userId) return [];
 
@@ -51,7 +50,7 @@ export async function getExpenses(userId: string): Promise<Expense[]> {
   }
 }
 
-export async function addExpense(userId: string, expenseData: Omit<Expense, 'id' | 'userId' | 'date'>) {
+export async function addExpense(firestore: Firestore, userId: string, expenseData: Omit<Expense, 'id' | 'userId' | 'date'>) {
     if (!userId) throw new Error("User not authenticated");
     
     const expensePayload = {
@@ -65,7 +64,7 @@ export async function addExpense(userId: string, expenseData: Omit<Expense, 'id'
 }
 
 
-export async function getSavingsGoals(userId: string): Promise<SavingsGoal[]> {
+export async function getSavingsGoals(firestore: Firestore, userId: string): Promise<SavingsGoal[]> {
   try {
     if (!userId) return [];
 
@@ -81,7 +80,7 @@ export async function getSavingsGoals(userId: string): Promise<SavingsGoal[]> {
   }
 }
 
-export async function addSavingsGoal(userId: string, goalData: Omit<SavingsGoal, 'id' | 'userId' | 'currentAmount'>) {
+export async function addSavingsGoal(firestore: Firestore, userId: string, goalData: Omit<SavingsGoal, 'id' | 'userId' | 'currentAmount'>) {
     if (!userId) throw new Error("User not authenticated");
 
     const newGoalData = {
@@ -94,7 +93,7 @@ export async function addSavingsGoal(userId: string, goalData: Omit<SavingsGoal,
     await addDoc(goalsRef, newGoalData);
 }
 
-export async function updateUserSettings(userId: string, settingsData: Partial<UserProfile>) {
+export async function updateUserSettings(firestore: Firestore, userId: string, settingsData: Partial<UserProfile>) {
     if (!userId) throw new Error("User not authenticated");
 
     const userRef = doc(firestore, "users", userId);

@@ -24,18 +24,19 @@ import { Goal } from "lucide-react";
 import { addSavingsGoal } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useRef, useState } from "react";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore } from "@/firebase";
 
 export default function AddGoalDialog() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
   const { user } = useUser();
+  const firestore = useFirestore();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!user) {
+    if (!user || !firestore) {
         toast({ variant: "destructive", title: "Error", description: "You must be logged in to add a goal." });
         return;
     }
@@ -48,7 +49,7 @@ export default function AddGoalDialog() {
     };
 
     try {
-        await addSavingsGoal(user.uid, goalData);
+        await addSavingsGoal(firestore, user.uid, goalData);
         toast({
             title: "Success",
             description: "Savings goal added successfully.",

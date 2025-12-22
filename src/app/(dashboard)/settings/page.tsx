@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { getUser } from '@/app/actions';
 import SettingsForm from '@/components/dashboard/settings-form';
@@ -10,6 +10,7 @@ import type { UserProfile } from '@/lib/types';
 
 export default function SettingsPage() {
     const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
     const router = useRouter();
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -22,15 +23,15 @@ export default function SettingsPage() {
 
     useEffect(() => {
         async function fetchUserProfile() {
-            if (user) {
+            if (user && firestore) {
                 setLoading(true);
-                const profile = await getUser(user.uid);
+                const profile = await getUser(firestore, user.uid);
                 setUserProfile(profile);
                 setLoading(false);
             }
         }
         fetchUserProfile();
-    }, [user]);
+    }, [user, firestore]);
 
     if (loading || isUserLoading) {
         return (

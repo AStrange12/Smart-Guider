@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import {
   getUser,
   getExpenses,
@@ -26,6 +26,7 @@ import type { AnalyzeSpendingBehaviorOutput } from '@/ai/flows/analyze-spending-
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -42,12 +43,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function fetchData() {
-      if (user) {
+      if (user && firestore) {
         setLoading(true);
         const [profile, userExpenses, userGoals] = await Promise.all([
-          getUser(user.uid),
-          getExpenses(user.uid),
-          getSavingsGoals(user.uid),
+          getUser(firestore, user.uid),
+          getExpenses(firestore, user.uid),
+          getSavingsGoals(firestore, user.uid),
         ]);
 
         setUserProfile(profile);
@@ -84,7 +85,7 @@ export default function DashboardPage() {
       }
     }
     fetchData();
-  }, [user]);
+  }, [user, firestore]);
 
   if (loading || isUserLoading) {
     return (

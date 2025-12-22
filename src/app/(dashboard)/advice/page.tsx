@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { getExpenses, getUser } from '@/app/actions';
 import { analyzeSpendingBehavior } from '@/ai/flows/analyze-spending-behavior';
@@ -12,6 +12,7 @@ import type { AnalyzeSpendingBehaviorOutput } from '@/ai/flows/analyze-spending-
 
 export default function AdvicePage() {
     const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
     const router = useRouter();
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [spendingAnalysis, setSpendingAnalysis] = useState<AnalyzeSpendingBehaviorOutput | null>(null);
@@ -24,12 +25,12 @@ export default function AdvicePage() {
 
     useEffect(() => {
         async function fetchData() {
-            if (user) {
-                const profile = await getUser(user.uid);
+            if (user && firestore) {
+                const profile = await getUser(firestore, user.uid);
                 setUserProfile(profile);
 
                 if (profile) {
-                    const expenses = await getExpenses(user.uid);
+                    const expenses = await getExpenses(firestore, user.uid);
                     const spendingAnalysisResult = await analyzeSpendingBehavior({
                         expenses: expenses.map(e => ({ ...e, date: e.date.toDate().toISOString() })),
                         income: profile.salary || 0,
@@ -42,7 +43,7 @@ export default function AdvicePage() {
             }
         }
         fetchData();
-    }, [user]);
+    }, [user, firestore]);
 
     if (isUserLoading || !userProfile) {
         return (

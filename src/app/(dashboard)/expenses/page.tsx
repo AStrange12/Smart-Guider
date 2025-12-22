@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { getExpenses } from '@/app/actions';
 import AddExpenseDialog from '@/components/dashboard/add-expense-dialog';
@@ -12,6 +12,7 @@ import type { Expense } from '@/lib/types';
 
 export default function ExpensesPage() {
     const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
     const router = useRouter();
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [loading, setLoading] = useState(true);
@@ -24,15 +25,15 @@ export default function ExpensesPage() {
 
     useEffect(() => {
         async function fetchExpenses() {
-            if (user) {
+            if (user && firestore) {
                 setLoading(true);
-                const userExpenses = await getExpenses(user.uid);
+                const userExpenses = await getExpenses(firestore, user.uid);
                 setExpenses(userExpenses);
                 setLoading(false);
             }
         }
         fetchExpenses();
-    }, [user]);
+    }, [user, firestore]);
 
     if (loading || isUserLoading) {
         return (

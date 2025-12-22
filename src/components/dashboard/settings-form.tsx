@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore } from "@/firebase";
 
 const settingsSchema = z.object({
     salary: z.coerce.number().min(0, "Salary must be a positive number."),
@@ -30,6 +30,7 @@ export default function SettingsForm({ user: initialUser }: { user: UserProfile 
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
+    const firestore = useFirestore();
 
     const form = useForm<z.infer<typeof settingsSchema>>({
         resolver: zodResolver(settingsSchema),
@@ -45,7 +46,7 @@ export default function SettingsForm({ user: initialUser }: { user: UserProfile 
     const [needs, wants, savings] = form.watch(["needs", "wants", "savings"]);
 
     async function onSubmit(values: z.infer<typeof settingsSchema>) {
-        if (!user) {
+        if (!user || !firestore) {
             toast({ variant: "destructive", title: "Error", description: "You must be logged in." });
             return;
         }
@@ -63,7 +64,7 @@ export default function SettingsForm({ user: initialUser }: { user: UserProfile 
         };
 
         try {
-            await updateUserSettings(user.uid, settingsData);
+            await updateUserSettings(firestore, user.uid, settingsData);
             toast({
                 title: "Success!",
                 description: "Your settings have been updated.",

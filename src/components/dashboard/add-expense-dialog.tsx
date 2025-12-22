@@ -24,17 +24,18 @@ import { PlusCircle } from "lucide-react";
 import { addExpense } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useRef, useState } from "react";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore } from "@/firebase";
 
 export default function AddExpenseDialog() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
   const { user } = useUser();
+  const firestore = useFirestore();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!user) {
+    if (!user || !firestore) {
         toast({ variant: "destructive", title: "Error", description: "You must be logged in." });
         return;
     }
@@ -48,7 +49,7 @@ export default function AddExpenseDialog() {
     };
 
     try {
-        await addExpense(user.uid, expenseData);
+        await addExpense(firestore, user.uid, expenseData);
         toast({
             title: "Success",
             description: "Expense added successfully.",
