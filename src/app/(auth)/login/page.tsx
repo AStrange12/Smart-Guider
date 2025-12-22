@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { LoginForm } from '@/components/auth/login-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function LoginPage() {
   return (
@@ -22,15 +23,34 @@ export default function LoginPage() {
             <span className="ml-2 text-xl font-bold">FinAI Advisor</span>
         </Link>
        </div>
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-          <CardDescription>Sign in to access your financial dashboard.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LoginForm />
-        </CardContent>
-      </Card>
+       <Tabs defaultValue="login" className="w-full max-w-sm">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="login">Login</TabsTrigger>
+          <TabsTrigger value="register">Register</TabsTrigger>
+        </TabsList>
+        <TabsContent value="login">
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+              <CardDescription>Sign in to access your financial dashboard.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LoginForm isRegister={false} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="register">
+           <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
+              <CardDescription>Get started with your personalized financial advisor.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LoginForm isRegister={true} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
