@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -12,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Progress } from "@/components/ui/progress";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useUser, useFirestore } from "@/firebase";
 
 const settingsSchema = z.object({
@@ -28,7 +29,7 @@ const settingsSchema = z.object({
 
 export default function SettingsForm({ user: initialUser }: { user: UserProfile }) {
     const { toast } = useToast();
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isPending, startTransition] = useTransition();
     const { user } = useUser();
     const firestore = useFirestore();
 
@@ -45,38 +46,38 @@ export default function SettingsForm({ user: initialUser }: { user: UserProfile 
 
     const [needs, wants, savings] = form.watch(["needs", "wants", "savings"]);
 
-    async function onSubmit(values: z.infer<typeof settingsSchema>) {
+    function onSubmit(values: z.infer<typeof settingsSchema>) {
         if (!user || !firestore) {
             toast({ variant: "destructive", title: "Error", description: "You must be logged in." });
             return;
         }
-
-        setIsSubmitting(true);
         
-        const settingsData: Partial<UserProfile> = {
-            salary: values.salary,
-            taxRegime: values.taxRegime,
-            budget: {
-                needs: values.needs,
-                wants: values.wants,
-                savings: values.savings,
-            }
-        };
+        startTransition(() => {
+            const settingsData: Partial<UserProfile> = {
+                salary: values.salary,
+                taxRegime: values.taxRegime,
+                budget: {
+                    needs: values.needs,
+                    wants: values.wants,
+                    savings: values.savings,
+                }
+            };
 
-        try {
-            await updateUserSettings(firestore, user.uid, settingsData);
-            toast({
-                title: "Success!",
-                description: "Your settings have been updated.",
-            });
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Update Failed",
-                description: error.message || "Failed to update settings.",
-            });
-        }
-        setIsSubmitting(false);
+            updateUserSettings(firestore, user.uid, settingsData)
+                .then(() => {
+                    toast({
+                        title: "Success!",
+                        description: "Your settings have been updated.",
+                    });
+                })
+                .catch((error: any) => {
+                    toast({
+                        variant: "destructive",
+                        title: "Update Failed",
+                        description: error.message || "Failed to update settings.",
+                    });
+                });
+        });
     }
 
     return (
@@ -192,8 +193,8 @@ export default function SettingsForm({ user: initialUser }: { user: UserProfile 
                      )}
                 </div>
 
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : "Save Changes"}
+                <Button type="submit" disabled={isPending}>
+                    {isPending ? "Saving..." : "Save Changes"}
                 </Button>
             </form>
         </Form>

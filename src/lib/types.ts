@@ -1,3 +1,4 @@
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type UserProfile = {
@@ -32,5 +33,5 @@ export type SavingsGoal = {
   category: 'Emergency' | 'Gold' | 'Investments' | 'Other';
   targetAmount: number;
   currentAmount: number;
-  deadline?: Timestamp;
+  deadline: Timestamp;
 };

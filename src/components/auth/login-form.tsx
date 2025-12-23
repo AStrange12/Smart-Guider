@@ -60,12 +60,19 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
         // This can happen if the user closes the popup.
         // We can generally ignore this error.
         console.error("Google sign-in redirect error:", error.message);
+      })
+      .finally(() => {
+        setGoogleLoading(false);
       });
       
     // Handle redirect for email/password and direct Google sign-in
     const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (user) {
             router.push('/dashboard');
+        } else {
+            // Ensure loading state is reset if auth fails or user signs out
+            setLoading(false);
+            setGoogleLoading(false);
         }
     });
 
@@ -74,40 +81,35 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
   }, [auth, router]);
   
 
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (values: z.infer<typeof formSchema>) => {
     setLoading(true);
-    try {
-      if (isRegister) {
-        await createUserWithEmailAndPassword(auth, values.email, values.password);
-      } else {
-        await signInWithEmailAndPassword(auth, values.email, values.password);
-      }
-      // The onAuthStateChanged listener will handle the redirect.
-    } catch (error: any) {
+    const authPromise = isRegister
+      ? createUserWithEmailAndPassword(auth, values.email, values.password)
+      : signInWithEmailAndPassword(auth, values.email, values.password);
+
+    authPromise.catch((error: any) => {
       console.error("Authentication Error:", error);
       toast({
         variant: "destructive",
         title: "Authentication Failed",
         description: error.message || "An unexpected error occurred. Please try again.",
       });
-    } finally {
-      setLoading(false);
-    }
+      setLoading(false); // Reset loading state on error
+    });
+    // The onAuthStateChanged listener will handle the redirect on success.
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = () => {
     setGoogleLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
-    } catch (error: any) {
+    const provider = new GoogleAuthProvider();
+    signInWithRedirect(auth, provider).catch((error: any) => {
       toast({
         variant: "destructive",
         title: "Google Sign-In Failed",
         description: error.message,
       });
       setGoogleLoading(false);
-    }
+    });
   };
   
 

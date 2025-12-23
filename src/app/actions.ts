@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -11,10 +12,9 @@ import {
   serverTimestamp,
   updateDoc,
   Firestore,
+  Timestamp,
 } from "firebase/firestore";
 import { UserProfile, Expense, SavingsGoal } from "@/lib/types";
-import { getAuth } from "firebase/auth";
-import { initializeFirebase } from "@/firebase";
 
 export async function getUser(firestore: Firestore, uid: string): Promise<UserProfile | null> {
   try {
@@ -60,7 +60,7 @@ export async function addExpense(firestore: Firestore, userId: string, expenseDa
     };
 
     const expensesRef = collection(firestore, "users", userId, "expenses");
-    await addDoc(expensesRef, expensePayload);
+    return addDoc(expensesRef, expensePayload);
 }
 
 
@@ -80,22 +80,23 @@ export async function getSavingsGoals(firestore: Firestore, userId: string): Pro
   }
 }
 
-export async function addSavingsGoal(firestore: Firestore, userId: string, goalData: Omit<SavingsGoal, 'id' | 'userId' | 'currentAmount'>) {
+export async function addSavingsGoal(firestore: Firestore, userId: string, goalData: Omit<SavingsGoal, 'id' | 'userId' | 'currentAmount'> & { deadline: Date }) {
     if (!userId) throw new Error("User not authenticated");
 
     const newGoalData = {
         ...goalData,
+        deadline: Timestamp.fromDate(goalData.deadline),
         currentAmount: 0,
         userId: userId,
     };
 
     const goalsRef = collection(firestore, "users", userId, "savingsGoals");
-    await addDoc(goalsRef, newGoalData);
+    return addDoc(goalsRef, newGoalData);
 }
 
 export async function updateUserSettings(firestore: Firestore, userId: string, settingsData: Partial<UserProfile>) {
     if (!userId) throw new Error("User not authenticated");
 
     const userRef = doc(firestore, "users", userId);
-    await setDoc(userRef, settingsData, { merge: true });
+    return setDoc(userRef, settingsData, { merge: true });
 }

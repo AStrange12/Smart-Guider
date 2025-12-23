@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -33,7 +34,7 @@ export default function AddExpenseDialog() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!user || !firestore) {
         toast({ variant: "destructive", title: "Error", description: "You must be logged in." });
@@ -48,21 +49,24 @@ export default function AddExpenseDialog() {
       type: formData.get('type') as 'need' | 'want',
     };
 
-    try {
-        await addExpense(firestore, user.uid, expenseData);
+    // Close the dialog immediately for better perceived performance
+    setOpen(false);
+
+    addExpense(firestore, user.uid, expenseData).then(() => {
         toast({
             title: "Success",
             description: "Expense added successfully.",
         });
         formRef.current?.reset();
-        setOpen(false);
-    } catch (error: any) {
+    }).catch((error: any) => {
         toast({
             variant: "destructive",
             title: "Error",
             description: error.message || "Failed to add expense.",
         });
-    }
+        // Re-open the dialog if the submission failed
+        setOpen(true);
+    });
   };
 
   return (

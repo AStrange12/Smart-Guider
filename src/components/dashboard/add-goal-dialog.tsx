@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -33,7 +34,7 @@ export default function AddGoalDialog() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!user || !firestore) {
@@ -45,24 +46,26 @@ export default function AddGoalDialog() {
     const goalData = {
         name: formData.get('name') as string,
         targetAmount: parseFloat(formData.get('targetAmount') as string),
+        deadline: new Date(formData.get('deadline') as string),
         category: formData.get('category') as 'Emergency' | 'Gold' | 'Investments' | 'Other',
     };
 
-    try {
-        await addSavingsGoal(firestore, user.uid, goalData);
+    setOpen(false);
+
+    addSavingsGoal(firestore, user.uid, goalData).then(() => {
         toast({
             title: "Success",
             description: "Savings goal added successfully.",
         });
         formRef.current?.reset();
-        setOpen(false);
-    } catch (error: any) {
+    }).catch((error: any) => {
          toast({
             variant: "destructive",
             title: "Error",
             description: error.message || "Failed to add savings goal.",
         });
-    }
+        setOpen(true);
+    });
   };
 
   return (
@@ -92,6 +95,12 @@ export default function AddGoalDialog() {
               Target (₹)
             </Label>
             <Input id="targetAmount" name="targetAmount" type="number" step="100" className="col-span-3" required/>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="deadline" className="text-right">
+              Deadline
+            </Label>
+            <Input id="deadline" name="deadline" type="date" className="col-span-3" required/>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="category" className="text-right">
