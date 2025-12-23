@@ -1,13 +1,39 @@
+
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { useEffect } from 'react';
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
 import { UserProfile } from '@/lib/types';
+import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+
+
+async function createUserProfile(firestore: any, user: User) {
+    if (!firestore || !user) return;
+    const userRef = doc(firestore, "users", user.uid);
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) {
+        const userProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email,
+            name: user.displayName,
+            photoURL: user.photoURL,
+            createdAt: serverTimestamp() as any,
+            salary: 50000, // default value
+            taxRegime: 'new', // default value
+            budget: { // default 50-30-20
+            needs: 50,
+            wants: 30,
+            savings: 20,
+            }
+        };
+        // Use setDoc with merge:true to avoid overwriting data if it was created between getDoc and setDoc
+        await setDoc(userRef, userProfile, { merge: true });
+    }
+}
 
 
 export default function DashboardLayout({
@@ -18,42 +44,23 @@ export default function DashboardLayout({
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
+  const auth = getAuth();
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isUserLoading, router]);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User is signed in, create profile if it doesn't exist.
+        await createUserProfile(firestore, user);
+      } else {
+        // User is signed out, redirect to login.
+        router.push('/login');
+      }
+    });
 
-  useEffect(() => {
-    if (user && firestore) {
-      const userRef = doc(firestore, "users", user.uid);
-      
-      const checkAndCreateUserProfile = async () => {
-        const userDoc = await getDoc(userRef);
-        if (!userDoc.exists()) {
-          const userProfile: UserProfile = {
-              uid: user.uid,
-              email: user.email,
-              name: user.displayName,
-              photoURL: user.photoURL,
-              createdAt: serverTimestamp() as any,
-              salary: 50000, // default value
-              taxRegime: 'new', // default value
-              budget: { // default 50-30-20
-                needs: 50,
-                wants: 30,
-                savings: 20,
-              }
-            };
-          // Use setDoc with merge:true to create or update the user document
-          await setDoc(userRef, userProfile, { merge: true });
-        }
-      };
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [auth, firestore, router]);
 
-      checkAndCreateUserProfile();
-    }
-  }, [user, firestore])
 
   if (isUserLoading || !user) {
     return (

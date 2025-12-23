@@ -1,14 +1,12 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
 import { useForm } from "react-hook-form";
@@ -33,7 +31,6 @@ type LoginFormProps = {
 export function LoginForm({ isRegister = false }: LoginFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const { toast } = useToast();
   const auth = useAuth();
 
@@ -45,71 +42,49 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
     },
   });
 
-
-  useEffect(() => {
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!auth) return;
-
-    // Handle redirect from Google sign-in
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          router.push("/dashboard");
-        }
-      })
-      .catch((error) => {
-        // This can happen if the user closes the popup.
-        // We can generally ignore this error.
-        console.error("Google sign-in redirect error:", error.message);
-      })
-      .finally(() => {
-        setGoogleLoading(false);
-      });
-      
-    // Handle redirect for email/password and direct Google sign-in
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-            router.push('/dashboard');
-        } else {
-            // Ensure loading state is reset if auth fails or user signs out
-            setLoading(false);
-            setGoogleLoading(false);
-        }
-    });
-
-    return () => unsubscribe();
-
-  }, [auth, router]);
-  
-
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
     setLoading(true);
+
     const authPromise = isRegister
       ? createUserWithEmailAndPassword(auth, values.email, values.password)
       : signInWithEmailAndPassword(auth, values.email, values.password);
 
-    authPromise.catch((error: any) => {
+    try {
+      const userCredential = await authPromise;
+      if (userCredential.user) {
+        router.push("/dashboard");
+      }
+    } catch (error: any) {
       console.error("Authentication Error:", error);
       toast({
         variant: "destructive",
         title: "Authentication Failed",
         description: error.message || "An unexpected error occurred. Please try again.",
       });
-      setLoading(false); // Reset loading state on error
-    });
-    // The onAuthStateChanged listener will handle the redirect on success.
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleGoogleSignIn = () => {
-    setGoogleLoading(true);
+  const handleGoogleSignIn = async () => {
+    if (!auth) return;
+    setLoading(true);
     const provider = new GoogleAuthProvider();
-    signInWithRedirect(auth, provider).catch((error: any) => {
-      toast({
+    try {
+      const result = await signInWithPopup(auth, provider);
+      if (result.user) {
+        router.push("/dashboard");
+      }
+    } catch (error: any) {
+       toast({
         variant: "destructive",
         title: "Google Sign-In Failed",
-        description: error.message,
+        description: error.code === 'auth/popup-closed-by-user' ? 'Sign-in cancelled.' : error.message,
       });
-      setGoogleLoading(false);
-    });
+    } finally {
+      setLoading(false);
+    }
   };
   
 
@@ -124,7 +99,7 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="name@example.com" {...field} />
+                  <Input placeholder="name@example.com" {...field} disabled={loading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -137,13 +112,13 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
+                  <Input type="password" placeholder="••••••••" {...field} disabled={loading}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" disabled={loading || googleLoading} className="w-full">
+          <Button type="submit" disabled={loading} className="w-full">
             {loading && (
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
             )}
@@ -161,8 +136,8 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
           </span>
         </div>
       </div>
-      <Button variant="outline" type="button" disabled={loading || googleLoading} onClick={handleGoogleSignIn}>
-        {googleLoading ? (
+      <Button variant="outline" type="button" disabled={loading} onClick={handleGoogleSignIn}>
+        {loading ? (
             <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
           ) : (
             <Chrome className="mr-2 h-4 w-4" />
