@@ -26,39 +26,35 @@ export default function AdvicePage() {
     }, [isUserLoading, user, router]);
 
     useEffect(() => {
-        async function fetchProfileAndExpenses() {
+        async function fetchProfileAndRunAnalysis() {
             if (user && firestore) {
                 setLoading(true);
-                const profile = await getUser(firestore, user.uid);
-                setUserProfile(profile);
-                const userExpenses = await getExpenses(firestore, user.uid);
-                setExpenses(userExpenses);
-                setLoading(false);
-            }
-        }
-        fetchProfileAndExpenses();
-    }, [user, firestore]);
-
-    useEffect(() => {
-        async function runAnalysis() {
-            if (userProfile && expenses.length > 0) {
                 try {
-                    const spendingAnalysisResult = await analyzeSpendingBehavior({
-                        expenses: expenses.map(e => ({ ...e, date: e.date.toDate().toISOString() })),
-                        income: userProfile.salary || 0,
-                    });
-                    setSpendingAnalysis(spendingAnalysisResult);
+                    const profile = await getUser(firestore, user.uid);
+                    setUserProfile(profile);
+
+                    const userExpenses = await getExpenses(firestore, user.uid);
+                    setExpenses(userExpenses);
+
+                    if (profile && userExpenses.length > 0) {
+                        const spendingAnalysisResult = await analyzeSpendingBehavior({
+                            expenses: userExpenses.map(e => ({ ...e, date: e.date.toDate().toISOString() })),
+                            income: profile.salary || 0,
+                        });
+                        setSpendingAnalysis(spendingAnalysisResult);
+                    } else {
+                        setSpendingAnalysis(null);
+                    }
                 } catch (error) {
-                    console.error("Failed to analyze spending:", error);
+                    console.error("Failed to fetch data or run analysis:", error);
                     setSpendingAnalysis(null);
+                } finally {
+                    setLoading(false);
                 }
-            } else {
-                setSpendingAnalysis(null);
             }
         }
-        runAnalysis();
-    }, [userProfile, expenses]);
-
+        fetchProfileAndRunAnalysis();
+    }, [user, firestore]);
 
     if (isUserLoading || loading) {
         return (
