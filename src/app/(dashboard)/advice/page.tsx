@@ -17,6 +17,7 @@ export default function AdvicePage() {
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [spendingAnalysis, setSpendingAnalysis] = useState<AnalyzeSpendingBehaviorOutput | null>(null);
     const [loading, setLoading] = useState(true);
+    const [expenses, setExpenses] = useState<Expense[]>([]);
 
     useEffect(() => {
         if (!isUserLoading && !user) {
@@ -25,34 +26,39 @@ export default function AdvicePage() {
     }, [isUserLoading, user, router]);
 
     useEffect(() => {
-        async function fetchData() {
+        async function fetchProfileAndExpenses() {
             if (user && firestore) {
                 setLoading(true);
                 const profile = await getUser(firestore, user.uid);
                 setUserProfile(profile);
-
-                if (profile) {
-                    const expenses = await getExpenses(firestore, user.uid);
-                    if (expenses.length > 0) {
-                        try {
-                            const spendingAnalysisResult = await analyzeSpendingBehavior({
-                                expenses: expenses.map(e => ({ ...e, date: e.date.toDate().toISOString() })),
-                                income: profile.salary || 0,
-                            });
-                            setSpendingAnalysis(spendingAnalysisResult);
-                        } catch (error) {
-                            console.error("Failed to analyze spending:", error);
-                            setSpendingAnalysis(null);
-                        }
-                    } else {
-                        setSpendingAnalysis(null);
-                    }
-                }
+                const userExpenses = await getExpenses(firestore, user.uid);
+                setExpenses(userExpenses);
                 setLoading(false);
             }
         }
-        fetchData();
+        fetchProfileAndExpenses();
     }, [user, firestore]);
+
+    useEffect(() => {
+        async function runAnalysis() {
+            if (userProfile && expenses.length > 0) {
+                try {
+                    const spendingAnalysisResult = await analyzeSpendingBehavior({
+                        expenses: expenses.map(e => ({ ...e, date: e.date.toDate().toISOString() })),
+                        income: userProfile.salary || 0,
+                    });
+                    setSpendingAnalysis(spendingAnalysisResult);
+                } catch (error) {
+                    console.error("Failed to analyze spending:", error);
+                    setSpendingAnalysis(null);
+                }
+            } else {
+                setSpendingAnalysis(null);
+            }
+        }
+        runAnalysis();
+    }, [userProfile, expenses]);
+
 
     if (isUserLoading || loading) {
         return (
