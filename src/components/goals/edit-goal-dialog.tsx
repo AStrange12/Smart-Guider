@@ -137,5 +137,3 @@ export default function EditGoalDialog({ goal, isOpen, onClose, onGoalUpdated }:
     </Dialog>
   );
 }
-
-    

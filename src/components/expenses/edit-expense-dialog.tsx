@@ -140,5 +140,3 @@ export default function EditExpenseDialog({ expense, isOpen, onClose, onExpenseU
     </Dialog>
   );
 }
-
-    
