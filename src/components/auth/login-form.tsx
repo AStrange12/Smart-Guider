@@ -82,6 +82,7 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
       } else {
         await signInWithEmailAndPassword(auth, values.email, values.password);
       }
+      // The onAuthStateChanged listener will handle the redirect.
     } catch (error: any) {
       console.error("Authentication Error:", error);
       toast({
