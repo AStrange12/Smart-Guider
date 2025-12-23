@@ -89,8 +89,6 @@ export default function DashboardPage() {
   }, [user, firestore]);
 
   useEffect(() => {
-    // This effect now correctly depends only on `fetchData`, which itself
-    // depends on `user` and `firestore`. It will run once when the user is available.
     fetchData();
   }, [fetchData]);
 

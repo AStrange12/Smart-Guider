@@ -50,13 +50,9 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
       ? createUserWithEmailAndPassword(auth, values.email, values.password)
       : signInWithEmailAndPassword(auth, values.email, values.password);
 
-    // NON-BLOCKING: Use .then() to handle success/error without freezing the UI.
     authPromise
       .then((userCredential) => {
-        if (userCredential.user) {
-          // Explicit navigation on success.
-          router.push("/dashboard");
-        }
+        router.push("/dashboard");
       })
       .catch((error) => {
         console.error("Authentication Error:", error);
@@ -76,12 +72,9 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
     setLoading(true);
     const provider = new GoogleAuthProvider();
     
-    // NON-BLOCKING: Use .then() for non-blocking UI and proper popup handling.
     signInWithPopup(auth, provider)
       .then((result) => {
-        if (result.user) {
-          router.push("/dashboard");
-        }
+        router.push("/dashboard");
       })
       .catch((error) => {
         toast({
