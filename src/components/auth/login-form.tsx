@@ -52,7 +52,8 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
 
     authPromise
       .then((userCredential) => {
-        router.push("/dashboard");
+        // The onAuthStateChanged listener in FirebaseProvider will handle the redirect.
+        // No need to push here.
       })
       .catch((error) => {
         console.error("Authentication Error:", error);
@@ -74,7 +75,7 @@ export function LoginForm({ isRegister = false }: LoginFormProps) {
     
     signInWithPopup(auth, provider)
       .then((result) => {
-        router.push("/dashboard");
+        // The onAuthStateChanged listener in FirebaseProvider will handle the redirect.
       })
       .catch((error) => {
         toast({

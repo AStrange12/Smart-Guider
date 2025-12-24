@@ -2,8 +2,8 @@
   "placeholderImages": [
     {
       "id": "hero-landing",
-      "description": "Abstract financial chart representing growth and planning.",
-      "imageUrl": "https://images.unsplash.com/photo-1749631934602-13b05524e688?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmaW5hbmNlJTIwYWJzdHJhY3R8ZW58MHx8fHwxNzY2MjI5NzQ2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "description": "An illustration showing a phone with a financial advisor, a piggy bank, and financial charts, representing AI-powered financial guidance.",
+      "imageUrl": "https://storage.googleapis.com/project-spark-335215.appspot.com/a422475a-6e21-4d1a-8263-6c825a075673",
       "imageHint": "finance abstract"
     }
   ]

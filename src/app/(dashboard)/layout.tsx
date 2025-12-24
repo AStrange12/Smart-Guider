@@ -2,13 +2,10 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { useEffect } from 'react';
-import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
-import { UserProfile } from '@/lib/types';
-import type { User } from 'firebase/auth';
 
 export default function DashboardLayout({
   children,

@@ -54,7 +54,10 @@ export default function DashboardPage() {
             const analysis = await analyzeSpendingBehavior({
                 expenses: userExpenses.map(e => ({...e, date: e.date.toDate().toISOString()})),
                 income: profile.salary || 0,
-            }).catch(() => null);
+            }).catch((e) => {
+              console.error("Failed to analyze spending behavior", e);
+              return null;
+            });
             setSpendingAnalysis(analysis);
           } else {
             setSpendingAnalysis(null);
@@ -77,7 +80,10 @@ export default function DashboardPage() {
                 wants: wantsTotal,
                 savings: savingsTotal,
                 totalIncome: income
-            }).catch(() => null);
+            }).catch((e) => {
+              console.error("Failed to summarize monthly spending", e);
+              return null;
+            });
             setSpendingSummary(summary);
           } else {
             setSpendingSummary(null);
