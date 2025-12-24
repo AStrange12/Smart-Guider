@@ -1,6 +1,8 @@
+
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,18 +37,7 @@ export function Sidebar({ isMobile = false, onLinkClick }: SidebarProps) {
     )}>
       <div className="flex h-16 items-center border-b px-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-6 w-6 text-primary"
-            >
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
+          <Image src="https://i.ibb.co/wHk5fgy/Chat-GPT-Image-Dec-24-2025-03-48-49-PM.png" alt="Salary Guider Logo" width={32} height={32} className="h-8 w-8" />
           <span className="">Salary Guider</span>
         </Link>
       </div>
