@@ -1,23 +1,61 @@
 # Deployment Instructions for Salary Guider
 
-This guide provides step-by-step instructions to deploy your Next.js application to Firebase Hosting.
+This guide provides instructions to deploy your Next.js application. You can choose between Firebase App Hosting (the default) or Vercel.
 
-## Prerequisites
+---
 
-1.  **Firebase Project**: Make sure you have a Firebase project created. If not, create one at the [Firebase Console](https://console.firebase.google.com/).
-2.  **Firebase CLI**: Install the Firebase CLI on your local machine.
-    ```bash
-    npm install -g firebase-tools
-    ```
-3.  **Authentication**: Log in to Firebase using the CLI.
-    ```bash
-    firebase login
-    ```
-4.  **Environment Variables**: Create a `.env.local` file in the root of your project by copying `.env.example`. Fill in the values from your Firebase project's settings (Go to Project Settings > General > Your apps > Firebase SDK snippet > Config).
+## Option 1: Deploying to Vercel (Recommended for Next.js)
 
-## Step-by-Step Deployment
+Vercel is the creator of Next.js and provides a seamless deployment experience.
 
-### 1. Initialize Firebase in Your Project
+### Prerequisites
+
+1.  **Vercel Account**: Sign up for a free account at [vercel.com](https://vercel.com).
+2.  **Git Repository**: Your project needs to be in a GitHub, GitLab, or Bitbucket repository.
+3.  **Environment Variables**: You'll need the Firebase project credentials from your `.env.local` file.
+
+### Step-by-Step Deployment
+
+#### Step 1: Push Your Code to a Git Repository
+
+If you haven't already, push your project to a service like GitHub.
+
+#### Step 2: Import Your Project in Vercel
+
+1.  Log in to your Vercel dashboard.
+2.  Click **"Add New... > Project"**.
+3.  Select the Git repository where you pushed your code. Vercel will automatically detect that it is a Next.js project.
+
+#### Step 3: Configure Environment Variables
+
+This is the most important step to connect your live app to Firebase.
+
+1.  In the "Configure Project" screen, expand the **"Environment Variables"** section.
+2.  You will need to add all the variables from your `.env.local` file one by one.
+    *   **Key**: The name of the variable (e.g., `NEXT_PUBLIC_FIREBASE_API_KEY`).
+    *   **Value**: The secret value from your `.env.local` file (e.g., `AIza...`).
+3.  Add all the `NEXT_PUBLIC_FIREBASE_*` variables that are in your `.env.example` file.
+
+#### Step 4: Deploy
+
+1.  After adding the environment variables, click the **"Deploy"** button.
+2.  Vercel will build and deploy your application. Once it's done, you'll be given a live URL for your project.
+
+Your app is now live! Vercel will automatically redeploy your application every time you push a new commit to your main branch.
+
+---
+
+## Option 2: Deploying to Firebase App Hosting
+
+### Prerequisites
+
+1.  **Firebase Project**: Make sure you have a Firebase project created.
+2.  **Firebase CLI**: Install with `npm install -g firebase-tools`.
+3.  **Authentication**: Log in with `firebase login`.
+
+### Step-by-Step Deployment
+
+#### 1. Initialize Firebase in Your Project
 
 If you haven't already, initialize Firebase in your project directory.
 
@@ -25,50 +63,21 @@ If you haven't already, initialize Firebase in your project directory.
 firebase init
 ```
 
-Follow the prompts:
 - Select **App Hosting**.
 - Choose your Firebase project.
-- When it asks for the public directory, enter `.next`. **This is important.**
-- It will ask to configure as a single-page app. Say **No**.
-- It will ask to set up GitHub Action deployments. You can choose **Yes** for CI/CD or **No** for manual deployments.
+- When asked for the public directory, enter `.next`.
+- Say **No** to configuring as a single-page app.
 
-This will create `firebase.json` and `.firebaserc` files in your project. The `apphosting.yaml` file is already configured for a Next.js app.
-
-### 2. Build Your Next.js App
-
-Before deploying, you need to create a production build of your application.
+#### 2. Build Your Next.js App
 
 ```bash
 npm run build
 ```
 
-This command compiles your Next.js app and places the output in the `.next` directory.
-
-### 3. Deploy to Firebase Hosting
-
-Now, you can deploy your application to Firebase Hosting.
+#### 3. Deploy to Firebase Hosting
 
 ```bash
 firebase deploy --only apphosting
 ```
 
-The CLI will upload your project to Firebase and provide you with a URL where your live app can be viewed.
-
-### 4. Continuous Integration (CI/CD) with GitHub Actions
-
-If you opted to set up GitHub Actions during `firebase init`, a `.github/workflows` directory was created with deployment workflows.
-
-1.  **Push to GitHub**: Commit and push your code to your GitHub repository.
-2.  **Secrets**: You'll need to add a `FIREBASE_SERVICE_ACCOUNT` secret to your GitHub repository secrets.
-    - Go to your Firebase project settings -> Service accounts.
-    - Generate a new private key. This will download a JSON file.
-    - Go to your GitHub repository -> Settings -> Secrets and variables -> Actions.
-    - Create a new repository secret named `FIREBASE_SERVICE_ACCOUNT` and paste the entire content of the downloaded JSON file as the value.
-3.  **Merge to `main`**: The default workflow is often configured to deploy when code is pushed or merged to the `main` branch. Check your workflow file (e.g., `.github/workflows/firebase-hosting-pull-request.yml`) for details.
-
-Your app will now automatically deploy whenever you push changes to the configured branch.
-
-## Common Issues
-
-- **Authentication Errors**: If you're using Google Sign-In, make sure you have added your production domain to the list of authorized domains in the Firebase Console (Authentication -> Settings -> Authorized domains).
-- **Environment Variables**: Server-side environment variables are handled differently in App Hosting. Refer to the [Firebase App Hosting documentation](https://firebase.google.com/docs/app-hosting/configure-backend#environment-variables) for securely managing secrets. `NEXT_PUBLIC_` variables are available on the client-side during the build process.
+The CLI will upload your project and provide you with a live URL.
