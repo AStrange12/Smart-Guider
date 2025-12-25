@@ -1,4 +1,4 @@
-# Firebase Studio
+# Salary Guider
 
 This is a NextJS starter in Firebase Studio.
 
