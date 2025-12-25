@@ -2,7 +2,7 @@
 
 Salary Guider is an intelligent web application designed to help users take control of their personal finances. By leveraging the power of generative AI, it provides personalized spending analysis, budget tracking, and actionable financial advice.
 
-[![Deploy with Vercel] -- https://smart-guider.vercel.app/ [ LIVE ]
+[ LIVE ] -- https://smart-guider.vercel.app/ 
 
 ---
 
