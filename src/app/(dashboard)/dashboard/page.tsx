@@ -22,6 +22,7 @@ import AddGoalDialog from '@/components/dashboard/add-goal-dialog';
 import MonthEndRiskCard from '@/components/dashboard/month-end-risk-card';
 import type { UserProfile, Expense, SavingsGoal, Investment } from '@/lib/types';
 import AddInvestmentDialog from '@/components/investments/add-investment-dialog';
+import MonthlyComparisonCard from '@/components/dashboard/monthly-comparison-card';
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
@@ -64,13 +65,30 @@ export default function DashboardPage() {
   if (!userProfile) return null;
 
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthlyExpenses = expenses.filter(e => e.date.toDate() >= startOfMonth);
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  
+  const startOfCurrentMonth = new Date(currentYear, currentMonth, 1);
+  const startOfPreviousMonth = new Date(currentYear, currentMonth - 1, 1);
+  const endOfPreviousMonth = new Date(currentYear, currentMonth, 0);
+
+  const monthlyExpenses = expenses.filter(e => e.date.toDate() >= startOfCurrentMonth);
+  const previousMonthExpenses = expenses.filter(e => {
+      const expenseDate = e.date.toDate();
+      return expenseDate >= startOfPreviousMonth && expenseDate <= endOfPreviousMonth;
+  });
+
   const totalSpent = monthlyExpenses.reduce((acc, exp) => acc + exp.amount, 0);
-  const needsTotal = monthlyExpenses.filter(e => e.type === 'need').reduce((acc, exp) => acc + exp.amount, 0);
-  const wantsTotal = monthlyExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
   const income = userProfile.salary || 0;
-  const savingsTotal = income - totalSpent > 0 ? income - totalSpent : 0;
+  
+  const needsTotalCurrent = monthlyExpenses.filter(e => e.type === 'need').reduce((acc, exp) => acc + exp.amount, 0);
+  const wantsTotalCurrent = monthlyExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
+  const savingsTotalCurrent = Math.max(0, income - (needsTotalCurrent + wantsTotalCurrent));
+
+  const needsTotalPrevious = previousMonthExpenses.filter(e => e.type === 'need').reduce((acc, exp) => acc + exp.amount, 0);
+  const wantsTotalPrevious = previousMonthExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
+  const savingsTotalPrevious = Math.max(0, income - (needsTotalPrevious + wantsTotalPrevious));
+
   const bonus = userProfile.bonus;
 
   return (
@@ -118,9 +136,9 @@ export default function DashboardPage() {
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <SpendingSplitCard 
-          needs={needsTotal} 
-          wants={wantsTotal} 
-          savings={savingsTotal}
+          needs={needsTotalCurrent} 
+          wants={wantsTotalCurrent} 
+          savings={savingsTotalCurrent}
           income={income}
         />
         <RecentExpenses expenses={expenses.slice(0, 10)} onExpenseChange={fetchData}/>
@@ -137,6 +155,20 @@ export default function DashboardPage() {
         <div className="lg:col-span-3">
             <SavingsGoals goals={savingsGoals} onGoalChange={fetchData}/>
         </div>
+       </div>
+       <div className="grid gap-4 md:grid-cols-1">
+        <MonthlyComparisonCard
+          current={{
+            needs: needsTotalCurrent,
+            wants: wantsTotalCurrent,
+            savings: savingsTotalCurrent
+          }}
+          previous={{
+            needs: needsTotalPrevious,
+            wants: wantsTotalPrevious,
+            savings: savingsTotalPrevious
+          }}
+        />
        </div>
     </main>
   );
