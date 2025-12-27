@@ -156,20 +156,25 @@ export default function DashboardPage() {
             <SavingsGoals goals={savingsGoals} onGoalChange={fetchData}/>
         </div>
        </div>
-       <div className="grid gap-4 md:grid-cols-1">
-        <MonthlyComparisonCard
-          current={{
-            needs: needsTotalCurrent,
-            wants: wantsTotalCurrent,
-            savings: savingsTotalCurrent
-          }}
-          previous={{
-            needs: needsTotalPrevious,
-            wants: wantsTotalPrevious,
-            savings: savingsTotalPrevious
-          }}
-        />
-       </div>
+       <Card>
+        <CardHeader>
+          <CardTitle>History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <MonthlyComparisonCard
+            current={{
+              needs: needsTotalCurrent,
+              wants: wantsTotalCurrent,
+              savings: savingsTotalCurrent
+            }}
+            previous={{
+              needs: needsTotalPrevious,
+              wants: wantsTotalPrevious,
+              savings: savingsTotalPrevious
+            }}
+          />
+        </CardContent>
+       </Card>
     </main>
   );
 }
