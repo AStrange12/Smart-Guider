@@ -14,7 +14,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { DollarSign, Receipt, Trophy } from 'lucide-react';
 import SpendingSplitCard from '@/components/dashboard/spending-split-card';
 import FinancialHealthCard from '@/components/dashboard/financial-health-card';
-import PersonalizedAdviceCard from '@/components/dashboard/personalized-advice-card';
 import RecentExpenses from '@/components/dashboard/recent-expenses';
 import SavingsGoals from '@/components/dashboard/savings-goals';
 import AddExpenseDialog from '@/components/dashboard/add-expense-dialog';
@@ -23,6 +22,7 @@ import MonthEndRiskCard from '@/components/dashboard/month-end-risk-card';
 import type { UserProfile, Expense, SavingsGoal, Investment } from '@/lib/types';
 import AddInvestmentDialog from '@/components/investments/add-investment-dialog';
 import MonthlyComparisonCard from '@/components/dashboard/monthly-comparison-card';
+import FinancialReportCard from '@/components/dashboard/financial-report-card';
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
@@ -136,10 +136,13 @@ export default function DashboardPage() {
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="lg:col-span-4">
             <CardHeader>
-                <CardTitle className="text-sm font-medium">AI Advisor</CardTitle>
+                <CardTitle className="text-sm font-medium">Financial Report</CardTitle>
             </CardHeader>
             <CardContent>
-                 <PersonalizedAdviceCard userProfile={userProfile} expenses={expenses} />
+                <FinancialReportCard
+                    userProfile={userProfile}
+                    expenses={monthlyExpenses}
+                />
             </CardContent>
         </Card>
         <div className="lg:col-span-3">
