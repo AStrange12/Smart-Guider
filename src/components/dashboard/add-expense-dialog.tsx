@@ -45,9 +45,22 @@ const expenseSchema = z.object({
   amount: z.coerce.number().min(0.01, "Amount must be greater than 0."),
   category: z.string().min(1, "Category is required."),
   type: z.enum(["need", "want"]),
+  emoji: z.string().optional(),
 });
 
 type ExpenseFormData = z.infer<typeof expenseSchema>;
+
+const categoryEmojis: Record<string, string> = {
+  "Food": "🍕",
+  "Transport": "🚕",
+  "Housing": "🏠",
+  "Utilities": "💡",
+  "Entertainment": "🎬",
+  "Health": "❤️‍🩹",
+  "Shopping": "🛒",
+  "EMI": "💳",
+  "Other": "🤷‍♀️",
+};
 
 export default function AddExpenseDialog({ onExpenseAdded }: AddExpenseDialogProps) {
   const { toast } = useToast();
@@ -65,6 +78,7 @@ export default function AddExpenseDialog({ onExpenseAdded }: AddExpenseDialogPro
       amount: undefined,
       category: "",
       type: undefined,
+      emoji: "",
     },
   });
 
@@ -82,7 +96,10 @@ export default function AddExpenseDialog({ onExpenseAdded }: AddExpenseDialogPro
       const result = await parseExpenseFromText({ text: parseText });
       if (result.description) form.setValue("description", result.description);
       if (result.amount) form.setValue("amount", result.amount);
-      if (result.category) form.setValue("category", result.category);
+      if (result.category) {
+        form.setValue("category", result.category);
+        form.setValue("emoji", categoryEmojis[result.category]);
+      }
       if (result.type) form.setValue("type", result.type);
       toast({
         title: "Parsing Complete",
@@ -203,22 +220,21 @@ export default function AddExpenseDialog({ onExpenseAdded }: AddExpenseDialogPro
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={(value) => {
+                    field.onChange(value);
+                    form.setValue("emoji", categoryEmojis[value]);
+                  }} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Food">Food</SelectItem>
-                      <SelectItem value="Transport">Transport</SelectItem>
-                      <SelectItem value="Housing">Housing</SelectItem>
-                      <SelectItem value="Utilities">Utilities</SelectItem>
-                      <SelectItem value="Entertainment">Entertainment</SelectItem>
-                      <SelectItem value="Health">Health</SelectItem>
-                      <SelectItem value="Shopping">Shopping</SelectItem>
-                      <SelectItem value="EMI">EMI</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      {Object.entries(categoryEmojis).map(([category, emoji]) => (
+                        <SelectItem key={category} value={category}>
+                          {emoji} {category}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

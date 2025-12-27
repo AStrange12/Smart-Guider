@@ -75,7 +75,10 @@ export default function ExpensesDataTable({ expenses, onExpenseChange }: Expense
             {expenses.map((expense) => (
               <TableRow key={expense.id}>
                 <TableCell>
-                  <div className="font-medium">{expense.description}</div>
+                  <div className="font-medium flex items-center">
+                    {expense.emoji && <span className="mr-2 text-lg">{expense.emoji}</span>}
+                    {expense.description}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline">{expense.category}</Badge>
@@ -131,5 +134,3 @@ export default function ExpensesDataTable({ expenses, onExpenseChange }: Expense
     </>
   );
 }
-
-    

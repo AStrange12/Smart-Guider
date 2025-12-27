@@ -28,13 +28,14 @@ export type Expense = {
   date: Timestamp;
   description?: string;
   type: 'need' | 'want';
+  emoji?: string;
 };
 
 export type SavingsGoal = {
   id:string;
   userId: string;
   name: string;
-  category: 'Emergency' | 'Gold' | 'Investments' | 'Other';
+  category: 'Travel' | 'Gadget' | 'Emergency Fund' | 'Investment' | 'Down Payment' | 'Education' | 'Other';
   targetAmount: number;
   currentAmount: number;
   deadline: Timestamp;
@@ -44,7 +45,7 @@ export type Investment = {
   id: string;
   userId: string;
   name: string;
-  type: 'Stock' | 'Crypto' | 'Fixed Deposit' | 'Mutual Fund' | 'Other';
+  type: 'Stocks' | 'Mutual Funds' | 'ETFs' | 'Crypto' | 'Bonds' | 'Real Estate' | 'Other';
   purchaseDate: Timestamp;
   quantity?: number;
   purchasePrice: number;

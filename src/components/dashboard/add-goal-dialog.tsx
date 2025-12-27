@@ -26,6 +26,7 @@ import { addSavingsGoal } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useRef, useState } from "react";
 import { useUser, useFirestore } from "@/firebase";
+import type { SavingsGoal } from "@/lib/types";
 
 type AddGoalDialogProps = {
     onGoalAdded: () => void;
@@ -51,7 +52,7 @@ export default function AddGoalDialog({ onGoalAdded }: AddGoalDialogProps) {
         name: formData.get('name') as string,
         targetAmount: parseFloat(formData.get('targetAmount') as string),
         deadline: new Date(formData.get('deadline') as string),
-        category: formData.get('category') as 'Emergency' | 'Gold' | 'Investments' | 'Other',
+        category: formData.get('category') as SavingsGoal['category'],
     };
 
     try {
@@ -92,7 +93,7 @@ export default function AddGoalDialog({ onGoalAdded }: AddGoalDialogProps) {
             <Label htmlFor="name" className="text-right">
               Goal Name
             </Label>
-            <Input id="name" name="name" className="col-span-3" placeholder="e.g., Vacation Fund" required />
+            <Input id="name" name="name" className="col-span-3" placeholder="e.g., New MacBook Pro" required />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="targetAmount" className="text-right">
@@ -115,9 +116,12 @@ export default function AddGoalDialog({ onGoalAdded }: AddGoalDialogProps) {
                 <SelectValue placeholder="Select a savings category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Emergency">Emergency Fund</SelectItem>
-                <SelectItem value="Investments">Investments</SelectItem>
-                <SelectItem value="Gold">Gold</SelectItem>
+                <SelectItem value="Travel">Travel</SelectItem>
+                <SelectItem value="Gadget">Gadget</SelectItem>
+                <SelectItem value="Emergency Fund">Emergency Fund</SelectItem>
+                <SelectItem value="Investment">Investment</SelectItem>
+                <SelectItem value="Down Payment">Down Payment</SelectItem>
+                <SelectItem value="Education">Education</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
@@ -133,5 +137,3 @@ export default function AddGoalDialog({ onGoalAdded }: AddGoalDialogProps) {
     </Dialog>
   );
 }
-
-    

@@ -57,7 +57,7 @@ export default function EditGoalDialog({
         targetAmount: Number(formData.get("targetAmount")),
         currentAmount: Number(formData.get("currentAmount")),
         deadline: new Date(String(formData.get("deadline"))),
-        category: String(formData.get("category")) as any,
+        category: String(formData.get("category")) as SavingsGoal['category'],
       });
 
       toast({ title: "Updated successfully" });
@@ -129,9 +129,12 @@ export default function EditGoalDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Emergency">Emergency</SelectItem>
-                <SelectItem value="Investments">Investments</SelectItem>
-                <SelectItem value="Gold">Gold</SelectItem>
+                <SelectItem value="Travel">Travel</SelectItem>
+                <SelectItem value="Gadget">Gadget</SelectItem>
+                <SelectItem value="Emergency Fund">Emergency Fund</SelectItem>
+                <SelectItem value="Investment">Investment</SelectItem>
+                <SelectItem value="Down Payment">Down Payment</SelectItem>
+                <SelectItem value="Education">Education</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>

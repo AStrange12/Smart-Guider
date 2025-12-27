@@ -67,6 +67,10 @@
           "type": "string",
           "description": "Date of the expense.",
           "format": "date-time"
+        },
+        "emoji": {
+          "type": "string",
+          "description": "An optional emoji representing the expense category."
         }
       },
       "required": [
@@ -107,6 +111,19 @@
           "type": "string",
           "description": "Deadline for achieving the savings goal.",
           "format": "date-time"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "Travel",
+            "Gadget",
+            "Emergency Fund",
+            "Investment",
+            "Down Payment",
+            "Education",
+            "Other"
+          ],
+          "description": "Category of the savings goal."
         }
       },
       "required": [
@@ -115,7 +132,8 @@
         "name",
         "targetAmount",
         "currentAmount",
-        "deadline"
+        "deadline",
+        "category"
       ]
     },
     "Investment": {
@@ -138,7 +156,15 @@
         },
         "type": {
           "type": "string",
-          "enum": ["Stock", "Crypto", "Fixed Deposit", "Mutual Fund", "Other"],
+          "enum": [
+            "Stocks",
+            "Mutual Funds",
+            "ETFs",
+            "Crypto",
+            "Bonds",
+            "Real Estate",
+            "Other"
+          ],
           "description": "Type of the investment."
         },
         "purchaseDate": {

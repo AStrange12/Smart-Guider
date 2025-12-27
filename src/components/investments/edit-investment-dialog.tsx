@@ -38,7 +38,7 @@ type EditInvestmentDialogProps = {
 
 const investmentSchema = z.object({
   name: z.string().min(1, "Investment name is required."),
-  type: z.enum(["Stock", "Crypto", "Fixed Deposit", "Mutual Fund", "Other"]),
+  type: z.enum(["Stocks", "Mutual Funds", "ETFs", "Crypto", "Bonds", "Real Estate", "Other"]),
   purchaseDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
     message: "Valid date is required",
   }),
@@ -132,10 +132,12 @@ export default function EditInvestmentDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Stock">Stock</SelectItem>
+                      <SelectItem value="Stocks">Stocks</SelectItem>
+                      <SelectItem value="Mutual Funds">Mutual Funds</SelectItem>
+                      <SelectItem value="ETFs">ETFs</SelectItem>
                       <SelectItem value="Crypto">Crypto</SelectItem>
-                      <SelectItem value="Fixed Deposit">Fixed Deposit</SelectItem>
-                      <SelectItem value="Mutual Fund">Mutual Fund</SelectItem>
+                      <SelectItem value="Bonds">Bonds</SelectItem>
+                      <SelectItem value="Real Estate">Real Estate</SelectItem>
                       <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>

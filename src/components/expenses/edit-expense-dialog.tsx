@@ -32,6 +32,18 @@ type Props = {
   onExpenseUpdated: () => void;
 };
 
+const categoryEmojis: Record<string, string> = {
+    "Food": "🍕",
+    "Transport": "🚕",
+    "Housing": "🏠",
+    "Utilities": "💡",
+    "Entertainment": "🎬",
+    "Health": "❤️‍🩹",
+    "Shopping": "🛒",
+    "EMI": "💳",
+    "Other": "🤷‍♀️",
+};
+
 export default function EditExpenseDialog({
   expense,
   isOpen,
@@ -42,6 +54,7 @@ export default function EditExpenseDialog({
   const { user } = useUser();
   const firestore = useFirestore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(expense.category);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -51,12 +64,14 @@ export default function EditExpenseDialog({
 
     try {
       const formData = new FormData(e.currentTarget);
+      const category = String(formData.get("category"));
 
       await updateExpense(firestore, user.uid, expense.id, {
         description: String(formData.get("description")),
         amount: Number(formData.get("amount")),
-        category: String(formData.get("category")),
+        category: category,
         type: String(formData.get("type")) as "need" | "want",
+        emoji: categoryEmojis[category] || "",
       });
 
       toast({ title: "Expense updated" });
@@ -114,20 +129,16 @@ export default function EditExpenseDialog({
 
           <div>
             <Label>Category</Label>
-            <Select name="category" defaultValue={expense.category}>
+            <Select name="category" defaultValue={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Food">Food</SelectItem>
-                <SelectItem value="Transport">Transport</SelectItem>
-                <SelectItem value="Housing">Housing</SelectItem>
-                <SelectItem value="Utilities">Utilities</SelectItem>
-                <SelectItem value="Entertainment">Entertainment</SelectItem>
-                <SelectItem value="Health">Health</SelectItem>
-                <SelectItem value="Shopping">Shopping</SelectItem>
-                <SelectItem value="EMI">EMI</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
+                {Object.entries(categoryEmojis).map(([category, emoji]) => (
+                    <SelectItem key={category} value={category}>
+                        {emoji} {category}
+                    </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
