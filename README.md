@@ -1,13 +1,6 @@
-<<<<<<< HEAD
-# Smart Salary Guider
-
-Salary Guider is an intelligent web application designed to help users take control of their personal finances. By leveraging the power of generative AI, it provides personalized spending analysis, budget tracking, and actionable financial advice.
-
-[ LIVE ] -- https://smart-guider.vercel.app/ 
-=======
 # FinAI Advisor: Your Personal Salary Guider
 
-FinAI Advisor is an intelligent web application designed to help users take control of their personal finances. By leveraging the power of generative AI, it provides personalized spending analysis, budget tracking, and actionable financial advice.
+It is an intelligent web application designed to help users take control of their personal finances. By leveraging the power of generative AI, it provides personalized spending analysis, budget tracking, and actionable financial advice.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com)
 >>>>>>> 8dc9ab6 (provide me content for Readme file so that i can add it in github)
