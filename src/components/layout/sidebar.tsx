@@ -13,6 +13,7 @@ import {
   Settings,
   Lightbulb,
   Landmark,
+  History,
 } from "lucide-react";
 
 const navItems = [
@@ -20,6 +21,7 @@ const navItems = [
   { href: "/expenses", label: "Expenses", icon: Receipt },
   { href: "/goals", label: "Goals", icon: Goal },
   { href: "/investments", label: "Investments", icon: Landmark },
+  { href: "/history", label: "History", icon: History },
   { href: "/advice", label: "AI Advice", icon: Lightbulb },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

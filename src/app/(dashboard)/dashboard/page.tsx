@@ -69,14 +69,8 @@ export default function DashboardPage() {
   const currentMonth = now.getMonth();
   
   const startOfCurrentMonth = new Date(currentYear, currentMonth, 1);
-  const startOfPreviousMonth = new Date(currentYear, currentMonth - 1, 1);
-  const endOfPreviousMonth = new Date(currentYear, currentMonth, 0);
 
   const monthlyExpenses = expenses.filter(e => e.date.toDate() >= startOfCurrentMonth);
-  const previousMonthExpenses = expenses.filter(e => {
-      const expenseDate = e.date.toDate();
-      return expenseDate >= startOfPreviousMonth && expenseDate <= endOfPreviousMonth;
-  });
 
   const totalSpent = monthlyExpenses.reduce((acc, exp) => acc + exp.amount, 0);
   const income = userProfile.salary || 0;
@@ -84,10 +78,6 @@ export default function DashboardPage() {
   const needsTotalCurrent = monthlyExpenses.filter(e => e.type === 'need').reduce((acc, exp) => acc + exp.amount, 0);
   const wantsTotalCurrent = monthlyExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
   const savingsTotalCurrent = Math.max(0, income - (needsTotalCurrent + wantsTotalCurrent));
-
-  const needsTotalPrevious = previousMonthExpenses.filter(e => e.type === 'need').reduce((acc, exp) => acc + exp.amount, 0);
-  const wantsTotalPrevious = previousMonthExpenses.filter(e => e.type === 'want').reduce((acc, exp) => acc + exp.amount, 0);
-  const savingsTotalPrevious = Math.max(0, income - (needsTotalPrevious + wantsTotalPrevious));
 
   const bonus = userProfile.bonus;
 
@@ -156,25 +146,6 @@ export default function DashboardPage() {
             <SavingsGoals goals={savingsGoals} onGoalChange={fetchData}/>
         </div>
        </div>
-       <Card>
-        <CardHeader>
-          <CardTitle>History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <MonthlyComparisonCard
-            current={{
-              needs: needsTotalCurrent,
-              wants: wantsTotalCurrent,
-              savings: savingsTotalCurrent
-            }}
-            previous={{
-              needs: needsTotalPrevious,
-              wants: wantsTotalPrevious,
-              savings: savingsTotalPrevious
-            }}
-          />
-        </CardContent>
-       </Card>
     </main>
   );
 }
