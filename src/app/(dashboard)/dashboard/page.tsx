@@ -10,7 +10,7 @@ import {
   getSavingsGoals,
   getInvestments,
 } from '@/app/actions';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { DollarSign, Receipt, Trophy } from 'lucide-react';
 import SpendingSplitCard from '@/components/dashboard/spending-split-card';
 import FinancialHealthCard from '@/components/dashboard/financial-health-card';
@@ -136,7 +136,8 @@ export default function DashboardPage() {
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="lg:col-span-4">
             <CardHeader>
-                <CardTitle className="text-sm font-medium">Financial Report</CardTitle>
+                <CardTitle>Financial Report</CardTitle>
+                 <CardDescription>A summary of your spending against your budget for this month.</CardDescription>
             </CardHeader>
             <CardContent>
                 <FinancialReportCard
